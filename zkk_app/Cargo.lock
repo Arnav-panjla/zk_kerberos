@@ -3309,6 +3309,7 @@ name = "risc0-circuit"
 version = "0.1.0"
 dependencies = [
  "bincode 2.0.1",
+ "log",
  "methods",
  "reqwest",
  "risc0-build",

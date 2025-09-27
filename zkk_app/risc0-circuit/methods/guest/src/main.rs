@@ -5,7 +5,7 @@ use sha2::{Sha256, Digest};
 #[no_mangle]
 fn main() {
 
-    let input: Vec<u8> = env::read();
+    let input : Vec<u8> = env::read();
     
     if input.len() < 29 {
         eprintln!("Invalid input! Needs at least 29 bytes.");

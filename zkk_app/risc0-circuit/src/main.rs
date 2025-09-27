@@ -9,6 +9,8 @@ use std::net::TcpStream;
 use bincode;
 use serde::{Serialize, Deserialize};
 
+use log::{info, debug};
+
 
 #[derive(Debug, Serialize, Deserialize, bincode::Encode, bincode::Decode)]
 struct MessageReceived {
@@ -33,24 +35,20 @@ struct SignBundle {
 
 
 fn main() {
+
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
     let (private_key, public_key) = keys::generate_rsa_keypair().expect("Failed to generate RSA key pair");
 
-    let user_id = b"1234567890 ";  
-    let password = b"password12 "; 
-    let service_id = b"session456";  
     
-    let mut input = [0u8; 32];
-    input[0..11].copy_from_slice(user_id);
-    input[11..22].copy_from_slice(password);
-    input[22..].copy_from_slice(service_id);
-    
+    let input = b"1234567890 password12 session4";
+    debug!("Initial input: {:?}", std::str::from_utf8(input).unwrap());
+
 
     println!("{:?}", RISC0_CIRCUIT_ID);
-    let receipt = authenticate_user(input);
+    let receipt = authenticate_user(input.to_vec());
 
     let m = MessageReceived{
         u_pk: public_key,
@@ -81,7 +79,7 @@ fn main() {
     println!("Decrypted response: {:?}", response);
 }
 
-pub fn authenticate_user(input: [u8;32]) -> Receipt{
+pub fn authenticate_user(input: Vec<u8>) -> Receipt{
     let env = ExecutorEnv::builder()
         .write(&input).unwrap()
         .build().unwrap();
