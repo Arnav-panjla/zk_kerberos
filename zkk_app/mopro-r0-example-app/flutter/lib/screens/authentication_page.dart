@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:mopro_flutter/mopro_flutter.dart';
 import 'package:mopro_flutter/mopro_types.dart';
 
+
 class AuthenticatePage extends StatefulWidget {
   final String userId;
   final String password;
@@ -22,96 +23,66 @@ class AuthenticatePage extends StatefulWidget {
 class _AuthenticatePageState extends State<AuthenticatePage>
     with TickerProviderStateMixin {
   Risc0ProofOutput? _risc0ProofResult;
-  Risc0VerifyOutput? _risc0VerifyResult;
   final _moproFlutterPlugin = MoproFlutter();
   bool isProving = false;
-  bool isVerifying = false;
   Exception? _error;
   late AnimationController _proveButtonController;
-  late AnimationController _verifyButtonController;
   late AnimationController _resultsFadeController;
-  late Animation<double> _proveButtonScale;
-  late Animation<double> _verifyButtonScale;
-  late Animation<double> _resultsFade;
 
   @override
   void initState() {
     super.initState();
-    // Initialize animation controllers
     _proveButtonController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _verifyButtonController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
     _resultsFadeController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500),
       vsync: this,
-    );
-
-    // Initialize animations
-    _proveButtonScale = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _proveButtonController, curve: Curves.easeOut),
-    );
-    _verifyButtonScale = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _verifyButtonController, curve: Curves.easeOut),
-    );
-    _resultsFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _resultsFadeController, curve: Curves.easeIn),
     );
   }
 
   @override
   void dispose() {
     _proveButtonController.dispose();
-    _verifyButtonController.dispose();
     _resultsFadeController.dispose();
     super.dispose();
   }
 
   Future<void> _generateProof() async {
-    // Button press animation
     await _proveButtonController.forward();
     await _proveButtonController.reverse();
-
-    // Add haptic feedback
     HapticFeedback.lightImpact();
 
     setState(() {
       _error = null;
       isProving = true;
       _risc0ProofResult = null;
-      _risc0VerifyResult = null; // Reset verify result
+      _resultsFadeController.reset();
     });
 
-    FocusManager.instance.primaryFocus?.unfocus();
-    Risc0ProofOutput? risc0ProofResult;
     try {
-      final serviceId = "httpserver"; // As per original logic
+      final serviceId = "httpserver";
       final combinedMessage = "${widget.userId} $serviceId ${widget.password}";
-
-      risc0ProofResult =
+      final risc0ProofResult =
           await _moproFlutterPlugin.generateRisc0Proof(combinedMessage);
+
+      if (!mounted) return;
+      setState(() {
+        _risc0ProofResult = risc0ProofResult;
+      });
+      _resultsFadeController.forward();
+
     } on Exception catch (e) {
-      print("Error: $e");
-      risc0ProofResult = null;
+      if (!mounted) return;
       setState(() {
         _error = e;
       });
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      isProving = false;
-      _risc0ProofResult = risc0ProofResult;
-    });
-
-    // Animate results fade in
-    if (risc0ProofResult != null) {
-      _resultsFadeController.forward();
+    } finally {
+       if (!mounted) return;
+      setState(() {
+        isProving = false;
+      });
     }
   }
 
@@ -119,7 +90,8 @@ class _AuthenticatePageState extends State<AuthenticatePage>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Successfully connected to ${widget.service['name']}!'),
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -127,6 +99,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
   @override
   Widget build(BuildContext context) {
     final bool isProofGenerated = _risc0ProofResult != null;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -141,79 +114,76 @@ class _AuthenticatePageState extends State<AuthenticatePage>
             Text(
               widget.service['name']!,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            // The Text widget for the description has been removed.
+            const SizedBox(height: 8),
+            Text(
+              'Generate a proof to connect securely.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.grey.shade400,
+              ),
+            ),
             const SizedBox(height: 40),
             if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: Container(
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    border: Border.all(color: Colors.red.shade200),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Text(
-                    _error.toString(),
-                    style: TextStyle(color: Colors.red.shade700),
-                  ),
+              Container(
+                padding: const EdgeInsets.all(12.0),
+                margin: const EdgeInsets.only(bottom: 16.0),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  border: Border.all(color: Colors.red.shade700),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Text(
+                  _error.toString(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.red.shade200),
                 ),
               ),
-            AnimatedBuilder(
-              animation: _proveButtonScale,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _proveButtonScale.value,
-                  child: ElevatedButton.icon(
-                    onPressed: isProving ? null : _generateProof,
-                    icon: isProving
-                        ? Container(
-                            width: 24,
-                            height: 24,
-                            padding: const EdgeInsets.all(2.0),
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : const Icon(Icons.gpp_good_outlined),
-                    label: Text(isProving ? 'Generating...' : 'Generate Proof'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
-                );
-              },
+            ElevatedButton.icon(
+              onPressed: isProving ? null : _generateProof,
+              icon: isProving
+                  ? Container(
+                      width: 24,
+                      height: 24,
+                      padding: const EdgeInsets.all(2.0),
+                      child: const CircularProgressIndicator(
+                        color: Colors.black,
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : const Icon(Icons.shield_outlined),
+              label: Text(isProving ? 'Generating Proof...' : 'Generate Proof'),
             ),
             const SizedBox(height: 24),
             if (_risc0ProofResult != null)
-              AnimatedBuilder(
-                animation: _resultsFade,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _resultsFade.value,
-                    child: Card(
-                      color: Colors.green.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.green, size: 48),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Proof Generated Successfully!',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.green.shade800,
-                              ),
-                            ),
-                          ],
+              FadeTransition(
+                opacity: _resultsFadeController,
+                child: Card(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: theme.colorScheme.primary),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 48),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Proof Generated Successfully!',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
             const SizedBox(height: 24),
             OutlinedButton.icon(
@@ -223,7 +193,11 @@ class _AuthenticatePageState extends State<AuthenticatePage>
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 side: BorderSide(
-                  color: isProofGenerated ? Theme.of(context).primaryColor : Colors.grey,
+                  color: isProofGenerated ? theme.primaryColor : Colors.grey.shade800,
+                ),
+                foregroundColor: isProofGenerated ? theme.primaryColor : Colors.grey.shade600,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
             ),

@@ -21,9 +21,11 @@ fn main() {
     let file_data = include_bytes!("../../../New Document.txt");
     
     let mut hasher = Sha256::new();
-    hasher.update(&userId);
-    hasher.update(&password);
-    hasher.update(&service_Id);
+
+    hasher.update(userId.as_bytes());
+    hasher.update(password.as_bytes());
+    hasher.update(serviceId.as_bytes());
+
     let ids_hash: [u8; 32] = hasher.finalize().into();
 
     let target_hash = hex::encode(&ids_hash);
@@ -41,8 +43,8 @@ fn main() {
     let file_data_hash: [u8; 32] = hasher.finalize().into();
 
     let mut hasher = Sha256::new();
-    hasher.update(&userId);
-    hasher.update(&service_Id);
+    hasher.update(userId.as_bytes());
+    hasher.update(serviceId.as_bytes());
     let session_hash: [u8; 32] = hasher.finalize().into();
 
     env::commit(&(hash_exists_bytes, file_data_hash, session_hash));

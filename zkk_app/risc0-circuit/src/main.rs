@@ -39,14 +39,14 @@ fn main() {
 
     let (private_key, public_key) = keys::generate_rsa_keypair().expect("Failed to generate RSA key pair");
 
-    let user_id = b"1234567890";  
-    let password = b"password12"; 
+    let user_id = b"1234567890 ";  
+    let password = b"password12 "; 
     let service_id = b"session456";  
     
-    let mut input = [0u8; 30];
-    input[0..10].copy_from_slice(user_id);
-    input[10..20].copy_from_slice(password);
-    input[20..30].copy_from_slice(service_id);
+    let mut input = [0u8; 32];
+    input[0..11].copy_from_slice(user_id);
+    input[11..22].copy_from_slice(password);
+    input[22..].copy_from_slice(service_id);
     
 
     println!("{:?}", RISC0_CIRCUIT_ID);
@@ -81,12 +81,13 @@ fn main() {
     println!("Decrypted response: {:?}", response);
 }
 
-pub fn authenticate_user(input: [u8; 30]) -> Receipt{
+pub fn authenticate_user(input: [u8;32]) -> Receipt{
     let env = ExecutorEnv::builder()
         .write(&input).unwrap()
         .build().unwrap();
 
     let prover = default_prover();
+    
     let receipt = prover.prove(env, RISC0_CIRCUIT_ELF).unwrap().receipt;
 
     receipt

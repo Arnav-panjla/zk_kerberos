@@ -1,6 +1,6 @@
 #![allow(unexpected_cfgs)]
 
-use ecdsa_methods::{ECDSA_VERIFY_ELF, ECDSA_VERIFY_ID};
+use methods::{RISC0_CIRCUIT_ELF, RISC0_CIRCUIT_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 
 mopro_ffi::app!();
@@ -46,7 +46,7 @@ pub fn risc0_prove(message: String) -> Result<Risc0ProofOutput, Risc0Error> {
 
     // Generate proof
     let prove_info = prover
-        .prove(env, ECDSA_VERIFY_ELF)
+        .prove(env, RISC0_CIRCUIT_ELF)
         .map_err(|e| Risc0Error::ProveError(format!("Failed to generate proof: {}", e)))?;
 
     // Extract receipt
@@ -70,7 +70,7 @@ pub fn risc0_verify(receipt_bytes: Vec<u8>) -> Result<Risc0VerifyOutput, Risc0Er
 
     // Verify the receipt
     receipt
-        .verify(ECDSA_VERIFY_ID)
+        .verify(RISC0_CIRCUIT_ID)
         .map_err(|e| Risc0Error::VerifyError(format!("Failed to verify receipt: {}", e)))?;
 
     // Extract output from journal
