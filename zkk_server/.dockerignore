@@ -6,6 +6,7 @@ target/
 # Ignore git files
 .git
 .gitignore
+.env
 
 # Ignore IDE files
 .vscode/
