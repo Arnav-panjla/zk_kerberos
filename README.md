@@ -1,16 +1,36 @@
 # zk_kerberos
-zero knowledge kerberos
 
-
+Zero-knowledge Kerberos: users can authenticate with complete anonymity. The Kerberos validates their rights without ever learning their identity or the specific service they are targeting.
 
 ## Architecture
 
 ```
-├── risc0-circuit/          # RISC0 zkVM ECDSA circuit
-│   ├── src/main.rs         # Host program 
-│   └── methods/guest/      # Guest program 
-├── mopro-r0-example-app/   # Mopro FFI bindings
-│   ├── src/lib.rs          # UniFFI exports for mobile 
-│   └── flutter/            # Flutter app with ECDSA UI
-└── Cargo.toml              # Rust workspace configuration
+├── LICENSE
+├── README.md
+├── zkk_app
+│   ├── mopro-r0-example-app # MOBILE APP
+│   │   ├── build
+│   │   ├── Cargo.toml
+│   │   ├── Config.toml
+│   │   ├── flutter
+│   │   ├── Makefile
+│   │   ├── MoproAndroidBindings
+│   │   ├── README.md
+│   │   └── src
+│   ├── README.md
+│   ├── risc0-circuit # RISC0 PROVER CIRCUIT
+│   │   ├── Cargo.toml
+│   │   ├── LICENSE
+│   │   ├── methods
+│   │   ├── README.md
+│   │   └── src
+└── zkk_server
 ```
+
+## Database
+
+Using a public, verifiable database of hashes creates a more transparent and decentralized system where permissions can be audited without compromising user privacy. Hosted on Filecoin.
+
+## Mobile app
+
+![Mobile app screenshot](./assets/mobile_app_v1.png)
