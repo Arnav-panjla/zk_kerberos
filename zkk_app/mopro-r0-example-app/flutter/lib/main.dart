@@ -87,8 +87,8 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
     if (userId.length != 10) {
       return "User ID must be exactly 10 characters long (currently ${userId.length})";
     }
-    if (password.length != 10) {
-      return "Password must be exactly 10 characters long (currently ${password.length})";
+    if (password.length <= 8) {
+      return "Password must be greater than 8 characters long (currently ${password.length})";
     }
     if (serviceId.length != 10) {
       return "Service ID must be exactly 10 characters long (currently ${serviceId.length})";

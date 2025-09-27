@@ -8,24 +8,14 @@ This app generates and verifies zero-knowledge proofs that validate ECDSA signat
 
 ```
 ├── risc0-circuit/          # RISC0 zkVM ECDSA circuit
-│   ├── src/main.rs         # Host program (ECDSA proof generation)
-│   └── methods/guest/      # Guest program (ECDSA verification in zkVM)
+│   ├── src/main.rs         # Host program 
+│   └── methods/guest/      # Guest program 
 ├── mopro-r0-example-app/   # Mopro FFI bindings
-│   ├── src/lib.rs          # UniFFI exports for mobile (ECDSA functions)
+│   ├── src/lib.rs          # UniFFI exports for mobile 
 │   └── flutter/            # Flutter app with ECDSA UI
 └── Cargo.toml              # Rust workspace configuration
 ```
 
-## App Demo
-Mopro RISC0 ECDSA App demo running live on Pixel 10 Pro
-
-<div align="center">
-
-|  Message Input & Proof Generation |  ECDSA Proof Verification  |
-|:-------------------------:|:---------------------:|
-| <img src="./assets/img/pixel-10-pro-1.jpg" alt="ECDSA Message Input" width="280"/> | <img src="./assets/img/pixel-10-pro-2.jpg" alt="ECDSA Proof Verification" width="280"/> |
-
-</div>
 
 ## Prerequisites
 
@@ -49,8 +39,16 @@ flutter --version
 1. **Clone and setup**:
 ```bash
 # Clone this ECDSA example repository
-cd mopro-r0-ecdsa-app/mopro-r0-example-app
+cd zkk_app/mopro-r0-example-app
 ```
+
+2. **Use make file**:
+```bash
+# Direct makeFile
+make
+```
+
+**OR**
 
 2. **Build native bindings**:
 ```bash
@@ -61,6 +59,11 @@ mopro build
 ```bash
 mopro update
 ```
+4. **Transfer files**
+why? becauce i cant find a better way
+```bash
+make transfer
+```
 
 6. **Run Flutter app**:
 ```bash
@@ -68,7 +71,6 @@ cd flutter
 flutter pub get
 flutter run
 
-# Run `flutter emulator` to check available one if you want to run on PC first
 ```
 
 ## Development Commands
