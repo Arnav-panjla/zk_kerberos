@@ -30,17 +30,17 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
   late Animation<double> _resultsFade;
 
   // Controllers for the three string input fields
-  final TextEditingController _controllerField1 = TextEditingController();
-  final TextEditingController _controllerField2 = TextEditingController();
-  final TextEditingController _controllerField3 = TextEditingController();
+  final TextEditingController _userIdController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _serviceIdController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Set initial text for the three fields
-    _controllerField1.text = "Hello";
-    _controllerField2.text = "World";
-    _controllerField3.text = "ECDSA";
+    // Set initial text for the three fields (exactly 10 characters each)
+    _userIdController.text = "user123456";
+    _passwordController.text = "pass123456";
+    _serviceIdController.text = "httpserver";
 
     // Initialize animation controllers
     _proveButtonController = AnimationController(
@@ -70,13 +70,30 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _controllerField1.dispose();
-    _controllerField2.dispose();
-    _controllerField3.dispose();
+    _userIdController.dispose();
+    _passwordController.dispose();
+    _serviceIdController.dispose();
     _proveButtonController.dispose();
     _verifyButtonController.dispose();
     _resultsFadeController.dispose();
     super.dispose();
+  }
+
+  String? _validateInputs() {
+    final userId = _userIdController.text.trim();
+    final password = _passwordController.text.trim();
+    final serviceId = _serviceIdController.text.trim();
+
+    if (userId.length != 10) {
+      return "User ID must be exactly 10 characters long (currently ${userId.length})";
+    }
+    if (password.length != 10) {
+      return "Password must be exactly 10 characters long (currently ${password.length})";
+    }
+    if (serviceId.length != 10) {
+      return "Service ID must be exactly 10 characters long (currently ${serviceId.length})";
+    }
+    return null;
   }
 
   @override
@@ -85,7 +102,7 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Mopro RISC0 ECDSA App'),
+          title: const Text('zk-kerberos'),
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -108,40 +125,44 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-              // First string input field
+              // User ID input field
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
-                  controller: _controllerField1,
+                  controller: _userIdController,
                   decoration: const InputDecoration(
-                    labelText: "First Message",
-                    hintText: "Enter first part of message",
+                    labelText: "User ID",
+                    hintText: "Enter User ID (exactly 10 characters)",
                   ),
                   keyboardType: TextInputType.text,
+                  maxLength: 10,
                 ),
               ),
-              // Second string input field
+              // Password input field
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
-                  controller: _controllerField2,
+                  controller: _passwordController,
                   decoration: const InputDecoration(
-                    labelText: "Second Message",
-                    hintText: "Enter second part of message",
+                    labelText: "Password",
+                    hintText: "Enter Password (exactly 10 characters)",
                   ),
                   keyboardType: TextInputType.text,
+                  maxLength: 10,
+                  obscureText: true,
                 ),
               ),
-              // Third string input field
+              // Service ID input field
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
-                  controller: _controllerField3,
+                  controller: _serviceIdController,
                   decoration: const InputDecoration(
-                    labelText: "Third Message",
-                    hintText: "Enter third part of message",
+                    labelText: "Service ID",
+                    hintText: "Enter Service ID (exactly 10 characters)",
                   ),
                   keyboardType: TextInputType.text,
+                  maxLength: 10,
                 ),
               ),
               Row(
@@ -158,77 +179,94 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                             width: 160,
                             height: 48,
                             child: OutlinedButton(
-                              onPressed: (_controllerField1.text.trim().isEmpty || 
-                                        _controllerField2.text.trim().isEmpty ||
-                                        _controllerField3.text.trim().isEmpty ||
-                                        isProving || isVerifying)
-                                ? null
-                                : () async {
-                                  // Button press animation - complete before changing state
-                                  await _proveButtonController.forward();
-                                  await _proveButtonController.reverse();
+                              onPressed: (_validateInputs() != null ||
+                                      isProving ||
+                                      isVerifying)
+                                  ? null
+                                  : () async {
+                                      // Button press animation - complete before changing state
+                                      await _proveButtonController.forward();
+                                      await _proveButtonController.reverse();
 
-                                  // Add haptic feedback
-                                  HapticFeedback.lightImpact();
+                                      // Add haptic feedback
+                                      HapticFeedback.lightImpact();
 
-                                  setState(() {
-                                    _error = null;
-                                    isProving = true;
-                                    _risc0VerifyResult = null; // Reset verify result
-                                  });
+                                      setState(() {
+                                        _error = null;
+                                        isProving = true;
+                                        _risc0VerifyResult =
+                                            null; // Reset verify result
+                                      });
 
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                  Risc0ProofOutput? risc0ProofResult;
-                                  try {
-                                    final field1 = _controllerField1.text.trim();
-                                    final field2 = _controllerField2.text.trim();
-                                    final field3 = _controllerField3.text.trim();
-                                    
-                                    if (field1.isEmpty || field2.isEmpty || field3.isEmpty) {
-                                      throw Exception("All fields must be filled");
-                                    }
-                                    
-                                    // Combine the three strings (you can modify this logic as needed)
-                                    final combinedMessage = "$field1 $field2 $field3";
-                                    
-                                    risc0ProofResult = await _moproFlutterPlugin.generateRisc0Proof(combinedMessage);
-                                  } on Exception catch (e) {
-                                    print("Error: $e");
-                                    risc0ProofResult = null;
-                                    setState(() {
-                                      _error = e;
-                                    });
-                                  }
+                                      // Validate inputs first
+                                      final validationError = _validateInputs();
+                                      if (validationError != null) {
+                                        setState(() {
+                                          _error = Exception(validationError);
+                                          isProving = false;
+                                        });
+                                        return;
+                                      }
 
-                                  if (!mounted) return;
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      Risc0ProofOutput? risc0ProofResult;
+                                      try {
+                                        final userId =
+                                            _userIdController.text.trim();
+                                        final password =
+                                            _passwordController.text.trim();
+                                        final serviceId =
+                                            _serviceIdController.text.trim();
 
-                                  setState(() {
-                                    isProving = false;
-                                    _risc0ProofResult = risc0ProofResult;
-                                  });
+                                        // Combine the three strings (you can modify this logic as needed)
+                                        final combinedMessage =
+                                            "$userId $serviceId $password";
 
-                                  // Animate results fade in
-                                  if (risc0ProofResult != null) {
-                                    _resultsFadeController.forward();
-                                  }
-                                },
+                                        risc0ProofResult =
+                                            await _moproFlutterPlugin
+                                                .generateRisc0Proof(
+                                                    combinedMessage);
+                                      } on Exception catch (e) {
+                                        print("Error: $e");
+                                        risc0ProofResult = null;
+                                        setState(() {
+                                          _error = e;
+                                        });
+                                      }
+
+                                      if (!mounted) return;
+
+                                      setState(() {
+                                        isProving = false;
+                                        _risc0ProofResult = risc0ProofResult;
+                                      });
+
+                                      // Animate results fade in
+                                      if (risc0ProofResult != null) {
+                                        _resultsFadeController.forward();
+                                      }
+                                    },
                               child: isProving
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text("Proving..."),
-                                    ],
-                                  )
-                                : const Text("Generate Proof"),
+                                        SizedBox(width: 8),
+                                        Text("Proving..."),
+                                      ],
+                                    )
+                                  : const Text("Generate Proof"),
                             ),
                           ),
                         );
@@ -246,57 +284,65 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                             width: 160,
                             height: 48,
                             child: OutlinedButton(
-                              onPressed: (_risc0ProofResult != null && !isProving && !isVerifying)
-                                ? () async {
-                                  // Button press animation - complete before changing state
-                                  await _verifyButtonController.forward();
-                                  await _verifyButtonController.reverse();
+                              onPressed: (_risc0ProofResult != null &&
+                                      !isProving &&
+                                      !isVerifying)
+                                  ? () async {
+                                      // Button press animation - complete before changing state
+                                      await _verifyButtonController.forward();
+                                      await _verifyButtonController.reverse();
 
-                                  // Add haptic feedback
-                                  HapticFeedback.lightImpact();
+                                      // Add haptic feedback
+                                      HapticFeedback.lightImpact();
 
-                                  setState(() {
-                                    _error = null;
-                                    isVerifying = true;
-                                  });
+                                      setState(() {
+                                        _error = null;
+                                        isVerifying = true;
+                                      });
 
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                  Risc0VerifyOutput? verifyResult;
-                                  try {
-                                    verifyResult = await _moproFlutterPlugin.verifyRisc0Proof(_risc0ProofResult!.receipt);
-                                  } on Exception catch (e) {
-                                    print("Error: $e");
-                                    verifyResult = null;
-                                    setState(() {
-                                      _error = e;
-                                    });
-                                  }
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      Risc0VerifyOutput? verifyResult;
+                                      try {
+                                        verifyResult = await _moproFlutterPlugin
+                                            .verifyRisc0Proof(
+                                                _risc0ProofResult!.receipt);
+                                      } on Exception catch (e) {
+                                        print("Error: $e");
+                                        verifyResult = null;
+                                        setState(() {
+                                          _error = e;
+                                        });
+                                      }
 
-                                  if (!mounted) return;
+                                      if (!mounted) return;
 
-                                  setState(() {
-                                    _risc0VerifyResult = verifyResult;
-                                    isVerifying = false;
-                                  });
-                                }
-                                : null,
+                                      setState(() {
+                                        _risc0VerifyResult = verifyResult;
+                                        isVerifying = false;
+                                      });
+                                    }
+                                  : null,
                               child: isVerifying
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.green),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text("Verifying..."),
-                                    ],
-                                  )
-                                : const Text("Verify Proof"),
+                                        SizedBox(width: 8),
+                                        Text("Verifying..."),
+                                      ],
+                                    )
+                                  : const Text("Verify Proof"),
                             ),
                           ),
                         );
@@ -318,23 +364,29 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                           children: [
                             const Text('Proof Generated Successfully!'),
                             const SizedBox(height: 8),
-                            Text('Receipt size: ${(_risc0ProofResult!.receipt.length / 1024).toStringAsFixed(1)} KB'),
+                            Text(
+                                'Receipt size: ${(_risc0ProofResult!.receipt.length / 1024).toStringAsFixed(1)} KB'),
                             if (_risc0VerifyResult != null) ...[
                               const SizedBox(height: 16),
-                              Text('Verification: ${_risc0VerifyResult!.isValid ? "PASSED" : "FAILED"}'),
+                              Text(
+                                  'Verification: ${_risc0VerifyResult!.isValid ? "PASSED" : "FAILED"}'),
                               const SizedBox(height: 4),
-                              const Text('Verified Message:', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const Text('Verified Message:',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
                                 ),
                                 child: Text(
                                   _risc0VerifyResult!.verifiedMessage,
-                                  style: const TextStyle(fontFamily: 'monospace'),
+                                  style:
+                                      const TextStyle(fontFamily: 'monospace'),
                                 ),
                               ),
                             ],

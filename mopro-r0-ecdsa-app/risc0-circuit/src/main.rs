@@ -1,13 +1,12 @@
 use ecdsa_methods::{ECDSA_VERIFY_ELF, ECDSA_VERIFY_ID};
-use rand_core::OsRng;
 use risc0_zkvm::{ExecutorEnv, Receipt, default_prover};
 use log::{info, debug};
 
 fn main() {
     env_logger::init();
 
-    let message = b"This is a message that will be signed, and verified within the zkVM";
-    debug!("Message to sign: {:?}", std::str::from_utf8(message).unwrap());
+    let message = b"user123456 pass123456 asdfghjkl";
+    debug!("Initial input: {:?}", std::str::from_utf8(message).unwrap());
 
 
 
@@ -26,8 +25,10 @@ fn main() {
     receipt.verify(ECDSA_VERIFY_ID).unwrap();
     info!("Receipt verification successful");
 
-    // let receipt_message: Vec<u8> = receipt.journal.decode().unwrap();
-    // debug!("Journal decoded successfully");
+    let receipt_message: Vec<u8> = receipt.journal.decode().unwrap();
+    debug!("Journal decoded successfully");
+
+    debug!("Receipt message: {:?}", std::str::from_utf8(&receipt_message).unwrap());
 
 
 }

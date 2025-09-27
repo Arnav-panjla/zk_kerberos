@@ -1,23 +1,23 @@
 use risc0_zkvm::guest::env;
 
 fn main() {
-    // Decode the verifying key, message, and signature from the inputs.
-    // let (encoded_verifying_key, message, signature): (EncodedPoint, Vec<u8>, Signature) =
-    //     env::read();
-    // let verifying_key = VerifyingKey::from_encoded_point(&encoded_verifying_key).unwrap();
 
-    // // Verify the signature, panicking if verification fails.
-    // verifying_key
-    //     .verify(&message, &signature)
-    //     .expect("ECDSA signature verification failed");
+    let input: Vec<u8> = env::read();
 
-    // // Commit to the journal the verifying key and message that was signed.
-    // env::commit(&(encoded_verifying_key, message));
+    if input.len() < 21 {
+        eprintln!("Invalid input! Needs at least 21 bytes.");
+        return;
+    }
 
+    let user_id = String::from_utf8_lossy(&input[0..10]);
 
-    let message: Vec<u8> = env::read();
+    let session_id = String::from_utf8_lossy(&input[11..21]);
 
+    let password = String::from_utf8_lossy(&input[22..]);
 
-    
-    env::commit(&message);
+    println!("UserID: {}", user_id);
+    println!("SessionID: {}", session_id);
+    println!("Password: {}", password);
+
+    env::commit(&input);
 }

@@ -1,6 +1,6 @@
 # Makefile
 
-.PHONY: all mopro flutter
+.PHONY: all mopro transfer flutter circuit
 
 all: mopro transfer flutter
 
@@ -19,4 +19,8 @@ transfer:
 flutter:
 	@echo "Running flutter pub get and build..."
 	cd flutter && flutter pub get && flutter run
+
+circuit:
+	@echo "Running RISC0 circuit..."
+	cd .. && RUST_LOG=debug cargo run
 
