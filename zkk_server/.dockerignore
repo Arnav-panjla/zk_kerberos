@@ -1,0 +1,30 @@
+# Ignore build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore documentation
+*.md
+!README.md
+
+# Ignore test artifacts
+.coverage
