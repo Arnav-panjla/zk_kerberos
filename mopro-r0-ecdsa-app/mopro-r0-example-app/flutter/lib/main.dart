@@ -29,13 +29,18 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
   late Animation<double> _verifyButtonScale;
   late Animation<double> _resultsFade;
 
-  // Controller for RISC0 message input
-  final TextEditingController _controllerRisc0Message = TextEditingController();
+  // Controllers for the three string input fields
+  final TextEditingController _controllerField1 = TextEditingController();
+  final TextEditingController _controllerField2 = TextEditingController();
+  final TextEditingController _controllerField3 = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _controllerRisc0Message.text = "Hello, ECDSA!";
+    // Set initial text for the three fields
+    _controllerField1.text = "Hello";
+    _controllerField2.text = "World";
+    _controllerField3.text = "ECDSA";
 
     // Initialize animation controllers
     _proveButtonController = AnimationController(
@@ -65,13 +70,14 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _controllerRisc0Message.dispose();
+    _controllerField1.dispose();
+    _controllerField2.dispose();
+    _controllerField3.dispose();
     _proveButtonController.dispose();
     _verifyButtonController.dispose();
     _resultsFadeController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -102,17 +108,40 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+              // First string input field
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
-                  controller: _controllerRisc0Message,
+                  controller: _controllerField1,
                   decoration: const InputDecoration(
-                    labelText: "Message to sign and verify",
-                    hintText: "Enter any text message",
+                    labelText: "First Message",
+                    hintText: "Enter first part of message",
                   ),
                   keyboardType: TextInputType.text,
-                  maxLines: 3,
-                  minLines: 1,
+                ),
+              ),
+              // Second string input field
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: _controllerField2,
+                  decoration: const InputDecoration(
+                    labelText: "Second Message",
+                    hintText: "Enter second part of message",
+                  ),
+                  keyboardType: TextInputType.text,
+                ),
+              ),
+              // Third string input field
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: _controllerField3,
+                  decoration: const InputDecoration(
+                    labelText: "Third Message",
+                    hintText: "Enter third part of message",
+                  ),
+                  keyboardType: TextInputType.text,
                 ),
               ),
               Row(
@@ -129,7 +158,10 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                             width: 160,
                             height: 48,
                             child: OutlinedButton(
-                              onPressed: (_controllerRisc0Message.text.trim().isEmpty || isProving || isVerifying)
+                              onPressed: (_controllerField1.text.trim().isEmpty || 
+                                        _controllerField2.text.trim().isEmpty ||
+                                        _controllerField3.text.trim().isEmpty ||
+                                        isProving || isVerifying)
                                 ? null
                                 : () async {
                                   // Button press animation - complete before changing state
@@ -148,11 +180,18 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
                                   FocusManager.instance.primaryFocus?.unfocus();
                                   Risc0ProofOutput? risc0ProofResult;
                                   try {
-                                    final message = _controllerRisc0Message.text.trim();
-                                    if (message.isEmpty) {
-                                      throw Exception("Message cannot be empty");
+                                    final field1 = _controllerField1.text.trim();
+                                    final field2 = _controllerField2.text.trim();
+                                    final field3 = _controllerField3.text.trim();
+                                    
+                                    if (field1.isEmpty || field2.isEmpty || field3.isEmpty) {
+                                      throw Exception("All fields must be filled");
                                     }
-                                    risc0ProofResult = await _moproFlutterPlugin.generateRisc0Proof(message);
+                                    
+                                    // Combine the three strings (you can modify this logic as needed)
+                                    final combinedMessage = "$field1 $field2 $field3";
+                                    
+                                    risc0ProofResult = await _moproFlutterPlugin.generateRisc0Proof(combinedMessage);
                                   } on Exception catch (e) {
                                     print("Error: $e");
                                     risc0ProofResult = null;
