@@ -26,3 +26,13 @@ methods = { path = "../risc0-circuit/methods" }
 
 [build-dependencies]
 rust-witness = "0.1"
+
+
+[dependencies.openssl]
+version = "0.10"
+features = ["vendored"]
+
+[dependencies.openssl-sys]
+version = "0.9"
+features = ["vendored"]
+

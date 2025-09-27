@@ -41,18 +41,14 @@ pub fn risc0_prove(message: String) -> Result<Risc0ProofOutput, Risc0Error> {
             Risc0Error::ProveError(format!("Failed to build executor environment: {}", e))
         })?;
 
-    // Get the default prover
     let prover = default_prover();
 
-    // Generate proof
     let prove_info = prover
         .prove(env, RISC0_CIRCUIT_ELF)
         .map_err(|e| Risc0Error::ProveError(format!("Failed to generate proof: {}", e)))?;
 
-    // Extract receipt
     let receipt = prove_info.receipt;
 
-    // Serialize receipt to bytes
     let receipt_bytes = bincode::serialize(&receipt)
         .map_err(|e| Risc0Error::SerializeError(format!("Failed to serialize receipt: {}", e)))?;
 
@@ -64,22 +60,19 @@ pub fn risc0_prove(message: String) -> Result<Risc0ProofOutput, Risc0Error> {
 
 #[uniffi::export]
 pub fn risc0_verify(receipt_bytes: Vec<u8>) -> Result<Risc0VerifyOutput, Risc0Error> {
-    // Deserialize receipt from bytes
+
     let receipt: Receipt = bincode::deserialize(&receipt_bytes)
         .map_err(|e| Risc0Error::SerializeError(format!("Failed to deserialize receipt: {}", e)))?;
 
-    // Verify the receipt
     receipt
         .verify(RISC0_CIRCUIT_ID)
         .map_err(|e| Risc0Error::VerifyError(format!("Failed to verify receipt: {}", e)))?;
 
-    // Extract output from journal
     let output_value: Vec<u8> = receipt
         .journal
         .decode()
         .map_err(|e| Risc0Error::DecodeError(format!("Failed to decode journal: {}", e)))?;
 
-    // Convert Vec<u8> → String
     let verified_message = String::from_utf8(output_value)
         .map_err(|e| Risc0Error::DecodeError(format!("Invalid UTF-8 in journal: {}", e)))?;
 

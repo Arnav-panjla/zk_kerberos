@@ -1,5 +1,9 @@
 # Makefile
 
+# Environment for OpenSSL cross-compilation
+export OPENSSL_STATIC=1
+export PKG_CONFIG_ALLOW_CROSS=1
+
 .PHONY: all mopro transfer flutter circuit
 
 all: mopro transfer flutter
@@ -23,4 +27,3 @@ flutter:
 circuit:
 	@echo "Running RISC0 circuit..."
 	cd .. && RUST_LOG=debug cargo run
-
