@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart'; // ADD THIS IMPORT
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'screens/login_page.dart';
 import 'screens/services_page.dart';
 import 'screens/authentication_page.dart';
 import 'screens/settings_page.dart';
+import 'screens/welcome_page.dart';
 import 'models/settings_model.dart';
 
-// ... the rest of your main.dart file remains exactly the same
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
         onPrimary: Colors.black,
         onBackground: Color(0xFFE0E0E0),
         onSurface: Color(0xFFE0E0E0),
+        error: Colors.redAccent,
       ),
       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).apply(
         bodyColor: const Color(0xFFE0E0E0),
@@ -150,38 +151,32 @@ class MyApp extends StatelessWidget {
     
     return Consumer<SettingsModel>(
       builder: (context, settings, child) {
-        final currentTheme = settings.themeMode == ThemeMode.light 
-            ? lightTheme 
-            : darkTheme;
-
-        return AnimatedTheme(
-          data: settings.themeMode == ThemeMode.system
-              ? (MediaQuery.of(context).platformBrightness == Brightness.dark ? darkTheme : lightTheme)
-              : currentTheme,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-          child: MaterialApp(
-            title: 'zk-Kerberos App',
-            debugShowCheckedModeBanner: false,
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: settings.themeMode,
-            initialRoute: '/',
-            routes: {
-              '/': (context) => const LoginPage(),
-              '/services': (context) => const ServicesPage(),
-              '/settings': (context) => const SettingsPage(),
-              '/authenticate': (context) {
-                final args = ModalRoute.of(context)!.settings.arguments
-                    as Map<String, dynamic>;
-                return AuthenticatePage(
-                  userId: args['userId'] as String,
-                  password: args['password'] as String,
-                  service: args['service'] as Map<String, String>,
-                );
-              },
+        return MaterialApp(
+          title: 'zk-Kerberos App',
+          debugShowCheckedModeBanner: false,
+          // THIS SECTION IS CORRECTED
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: settings.themeMode,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const LoginPage(),
+            '/services': (context) => const ServicesPage(),
+            '/settings': (context) => const SettingsPage(),
+            '/authentication': (context) {
+              final args = ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>;
+              return AuthenticationPage(
+                userId: args['userId'] as String,
+                password: args['password'] as String,
+                service: args['service'] as Map<String, String>,
+              );
             },
-          ),
+            '/welcome': (context) {
+              final serviceName = ModalRoute.of(context)!.settings.arguments as String;
+              return WelcomePage(serviceName: serviceName);
+            }
+          },
         );
       },
     );

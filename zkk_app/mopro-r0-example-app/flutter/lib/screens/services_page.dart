@@ -12,7 +12,9 @@ class _ServicesPageState extends State<ServicesPage> {
   final List<String> _allServices = const [
     'Webmail',
     'Gradescope',
-    'Badal',
+    'Library',
+    'WiFi Access',
+    'Badal VM',
     'Moodle',
     'Admin Login',
   ];
@@ -43,6 +45,8 @@ class _ServicesPageState extends State<ServicesPage> {
         final bestMatch = query.bestMatch(_allServices);
         if (bestMatch.bestMatch.rating != null && bestMatch.bestMatch.rating! > 0.3) {
           filtered = [bestMatch.bestMatch.target!];
+        } else {
+          filtered = [];
         }
       }
       _filteredServices = filtered;
@@ -65,7 +69,6 @@ class _ServicesPageState extends State<ServicesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Available Services'),
-        // THIS SECTION ADDS THE SETTINGS ICON
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -91,7 +94,7 @@ class _ServicesPageState extends State<ServicesPage> {
               ),
             ),
           ),
-          if (_filteredServices.isEmpty)
+          if (_filteredServices.isEmpty && _searchController.text.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Text(
@@ -136,11 +139,6 @@ class _ServicesPageState extends State<ServicesPage> {
       },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 8.0),
-        color: Theme.of(context).colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.grey.shade800),
-        ),
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
           leading: CircleAvatar(
@@ -163,9 +161,10 @@ class _ServicesPageState extends State<ServicesPage> {
             size: 18,
           ),
           onTap: () {
+            // CORRECTED THE ROUTE NAME HERE
             Navigator.pushNamed(
               context,
-              '/authenticate',
+              '/authentication',
               arguments: {
                 'userId': userId,
                 'password': password,
