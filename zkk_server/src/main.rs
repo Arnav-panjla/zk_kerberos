@@ -34,7 +34,7 @@ pub fn download() {
 
 
 
-const METHOD_ID: [u32;8] = [1836308647, 1743861648, 3803708556, 3291731199, 3589807800, 2583256414, 3562111121, 2460626041];
+const METHOD_ID: [u32;8] = [1234675461, 1912861477, 2915228056, 335807080, 4028670944, 3144587984, 3967663459, 2473194626];
 
 fn handle_client(mut stream: TcpStream) {
     println!("[DEBUG] Starting client handler for connection: {:?}", stream.peer_addr().unwrap_or("unknown".parse().unwrap()));
@@ -47,7 +47,7 @@ fn handle_client(mut stream: TcpStream) {
 
 fn main() {
     println!("[DEBUG] Starting ZK Kerberos server");
-    dotenv::dotenv().ok();
+    dotenv::dotenv().ok(); 
     println!("[DEBUG] Environment variables loaded");
     
     println!("[DEBUG] Attempting to bind to address 127.0.0.1:7878");
@@ -73,18 +73,6 @@ fn main() {
             }
         }
     }
-    // {
-    //     // generate an ed25519 signing key and verifying key and print keys as hex
-    //     let mut csprng = rand::rngs::OsRng{};
-    //     let signing_key = ed25519_dalek::SigningKey::generate(&mut csprng);
-    //     let verifying_key = signing_key.verifying_key();
-
-    //     let pub_b64 = base64::encode(verifying_key.to_bytes());
-    //     println!("Public key (base64): {}", pub_b64);
-
-    //     let sec_b64 = base64::encode(signing_key.to_bytes());
-    //     println!("Secret key (base64): {}", sec_b64);
-    // }
 }
 
 
@@ -105,7 +93,8 @@ struct MessageSent {
 #[derive(Debug, bincode::Encode, bincode::Decode)]
 struct SignBundle {
     ssk: String,
-    hash: [u8; 32],
+    pass_hash: [u8; 32],
+    comb_hash: [u8; 32],
     timestamp: u64,
 }
 
@@ -117,7 +106,7 @@ fn client(stream: &mut TcpStream) {
     println!("[DEBUG] Message successfully deserialized");
     
     println!("[DEBUG] Decoding proof journal");
-    let (existence, file_hash, id_hash) : (u8, [u8; 32], [u8; 32]) = data.proof.journal.decode().expect("failed to decode journal");
+    let (existence, file_hash, id_hash, pass_hash) : (u8, [u8;32], [u8; 32], [u8; 32]) = data.proof.journal.decode().expect("failed to decode journal");
     println!("[DEBUG] Journal decoded - existence: {}, file_hash: {:?}, id_hash: {:?}", existence, file_hash, id_hash);
     
     println!("Received data: {:?}", data);
@@ -155,7 +144,9 @@ fn client(stream: &mut TcpStream) {
     }
     println!("[DEBUG] File hash verification successful");
 
-    println!("[DEBUG] File hash verification successful");
+    let mut hasher = Sha256::new();
+    hasher.update(&id_hash);
+    hasher.update(&pass_hash);
 
     println!("[DEBUG] Generating session key");
     let session_key = keys::gen_session_key();
@@ -171,9 +162,11 @@ fn client(stream: &mut TcpStream) {
     println!("[DEBUG] Creating SignBundle");
     let bundle = SignBundle {
         ssk: session_key,
-        hash: id_hash.try_into().expect("slice with incorrect length"),
+        pass_hash: pass_hash.try_into().expect("slice with incorrect length"),
+        comb_hash: hasher.finalize().into(),
         timestamp,
     };
+    
     println!("[DEBUG] SignBundle created: {:?}", bundle);
 
     println!("[DEBUG] Serializing SignBundle for signing");
