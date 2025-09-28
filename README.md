@@ -24,13 +24,21 @@ Zero-knowledge Kerberos: users can authenticate with complete anonymity. The Ker
 │   │   ├── methods
 │   │   ├── README.md
 │   │   └── src
-└── zkk_server
+└── zkk_server # Actual zk-kerberos server
+    ├── Cargo.lock
+    ├── Cargo.toml
+    ├── Dockerfile
+    ├── README.md
+    ├── src
+    │   ├── keys.rs
+    │   └── main.rs
+    └── target
 ```
 
 ## Database
-
 Using a public, verifiable database of hashes creates a more transparent and decentralized system where permissions can be audited without compromising user privacy. Hosted on Filecoin.
 
 ## Mobile app
 
 ![Mobile app screenshot](./assets/mobile_app_v1.png)
+
