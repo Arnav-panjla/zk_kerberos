@@ -26,10 +26,17 @@ fn main() {
     hasher.update(password.as_bytes());
     hasher.update(serviceId.as_bytes());
 
-    let ids_hash: [u8; 32] = hasher.finalize().into();
+    let check_hash: [u8; 32] = hasher.finalize().into();
 
-    let target_hash = hex::encode(&ids_hash);
+    let target_hash = hex::encode(&check_hash);
     let target_hash_hex = target_hash.as_bytes();
+
+    let mut hasher = Sha256::new();
+    hasher.update(&password);
+    hasher.update(&serviceId);
+
+
+    let pass_hash: [u8; 32] = hasher.finalize().into();
     
     let hash_exists = file_data
         .windows(target_hash_hex.len())
@@ -45,8 +52,8 @@ fn main() {
     let mut hasher = Sha256::new();
     hasher.update(userId.as_bytes());
     hasher.update(serviceId.as_bytes());
-    let session_hash: [u8; 32] = hasher.finalize().into();
+    let if_hash: [u8; 32] = hasher.finalize().into();
 
-    env::commit(&(hash_exists_bytes, file_data_hash, session_hash));
+    env::commit(&(hash_exists_bytes, file_data_hash, id_hash, pass_hash));
 
 }

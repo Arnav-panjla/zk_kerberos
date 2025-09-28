@@ -9,6 +9,10 @@ use std::net::TcpStream;
 use bincode;
 use serde::{Serialize, Deserialize};
 
+
+use std::fs::File;
+use std::io::Write;
+
 use log::{info, debug};
 
 
@@ -29,7 +33,8 @@ struct MessageSent {
 #[derive(Debug, bincode::Encode, bincode::Decode)]
 struct SignBundle {
     ssk: String,
-    hash: [u8; 32],
+    pass_hash: [u8; 32],
+    comb_hash: [u8; 32],
     timestamp: u64,
 }
 
@@ -43,12 +48,31 @@ fn main() {
     let (private_key, public_key) = keys::generate_rsa_keypair().expect("Failed to generate RSA key pair");
 
     
-    let input = b"1234567890 password12 session4";
+    let input = b"1234567890password12session456";
+    let service_id = b"session456";  
     debug!("Initial input: {:?}", std::str::from_utf8(input).unwrap());
-
+    let service_id_str = String::from_utf8_lossy(service_id);
 
     println!("{:?}", RISC0_CIRCUIT_ID);
-    let receipt = authenticate_user(input.to_vec());
+
+    let mut receipt;
+    let receipt_path  = format!("./receipt_{}.bin", service_id_str);
+
+    if std::path::Path::new(&receipt_path).exists() {
+        println!("Loading existing proof from {}", receipt_path);
+        receipt = load_receipt(&receipt_path).expect("failed to load receipt");
+        println!("Loaded receipt: {:?}", receipt);
+        if let Err(_) = receipt.verify(RISC0_CIRCUIT_ID) {
+            println!("Saved proof didn't successfully verify; regenerating proof");
+            receipt = authenticate_user(input);
+            save_receipt(&receipt, &receipt_path).expect("failed to save receipt");
+        }
+    } else {
+        println!("No existing proof found, generating a new one");
+        receipt = authenticate_user(input);
+        save_receipt(&receipt, &receipt_path).expect("failed to save receipt");
+    }
+
 
     let m = MessageReceived{
         u_pk: public_key,
@@ -84,11 +108,24 @@ pub fn authenticate_user(input: Vec<u8>) -> Receipt{
         .write(&input).unwrap()
         .build().unwrap();
 
-    let prover = default_prover();
-    
+    let prover = default_prover();    
     let receipt = prover.prove(env, RISC0_CIRCUIT_ELF).unwrap().receipt;
 
     receipt
 }
 
+
+pub fn save_receipt(receipt: &Receipt, path: &str) -> anyhow::Result<()> {
+    let encoded = bincode::serde::encode_to_vec(receipt, bincode::config::standard())?; // compact binary encoding
+    let mut file = File::create(path)?;
+    file.write_all(&encoded)?;
+    Ok(())
+}
+
+
+pub fn load_receipt(path: &str) -> anyhow::Result<Receipt> {
+    let data = std::fs::read(path)?;
+    let (receipt,_) = bincode::serde::decode_from_slice(&data, bincode::config::standard())?;
+    Ok(receipt)
+}
 
