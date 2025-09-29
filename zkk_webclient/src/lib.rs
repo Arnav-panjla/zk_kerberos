@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
+use yew::Renderer;
 
 mod app;
 mod components;
@@ -11,5 +12,5 @@ use app::App;
 
 #[wasm_bindgen(start)]
 pub fn run_app() {
-    yew::Renderer::<App>::new().render();
+    Renderer::<App>::new().render();
 }

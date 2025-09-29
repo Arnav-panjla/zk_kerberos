@@ -19,7 +19,11 @@ pub async fn generate_zk_proof(user_id: &str, service_id: &str, password: &str) 
 
     console_log(&format!("Generating proof for user: {}, service: {}", user_id, service_id));
     
-
+    // Simulate proof generation delay
+    gloo_timers::future::TimeoutFuture::new(3000).await;   
+    
+    
+    Ok(format!("proof_for_{}_{}", user_id, service_id))
 }
 
 pub fn get_avatar_text(name: &str) -> String {
