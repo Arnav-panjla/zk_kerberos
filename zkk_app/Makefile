@@ -24,7 +24,7 @@ flutter:
 
 circuit:
 	@echo "Running RISC0 circuit..."
-	RUST_LOG=debug cargo run
+	cd risc0-circuit && RUST_LOG=debug cargo run
 
 clean:
 	@echo "Cleaning up..."

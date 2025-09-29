@@ -34,6 +34,8 @@ Zero-knowledge Kerberos: users can authenticate with complete anonymity. The Ker
     │   └── main.rs
     └── target
 ```
+## Core protocol
+![]
 
 ## Database
 Using a public, verifiable database of hashes creates a more transparent and decentralized system where permissions can be audited without compromising user privacy. Hosted on Filecoin.

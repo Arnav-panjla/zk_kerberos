@@ -12,9 +12,9 @@ fn main() {
         return;
     }
 
-    let userId = String::from_utf8_lossy(&input[0..10]);
+    let user_id = String::from_utf8_lossy(&input[0..10]);
 
-    let serviceId = String::from_utf8_lossy(&input[11..21]);
+    let service_id = String::from_utf8_lossy(&input[11..21]);
 
     let password = String::from_utf8_lossy(&input[22..]);
 
@@ -22,9 +22,9 @@ fn main() {
     
     let mut hasher = Sha256::new();
 
-    hasher.update(userId.as_bytes());
+    hasher.update(user_id.as_bytes());
     hasher.update(password.as_bytes());
-    hasher.update(serviceId.as_bytes());
+    hasher.update(service_id.as_bytes());
 
     let check_hash: [u8; 32] = hasher.finalize().into();
 
@@ -32,9 +32,8 @@ fn main() {
     let target_hash_hex = target_hash.as_bytes();
 
     let mut hasher = Sha256::new();
-    hasher.update(&password);
-    hasher.update(&serviceId);
-
+    hasher.update(password.as_bytes());
+    hasher.update(service_id.as_bytes());
 
     let pass_hash: [u8; 32] = hasher.finalize().into();
     
@@ -50,9 +49,9 @@ fn main() {
     let file_data_hash: [u8; 32] = hasher.finalize().into();
 
     let mut hasher = Sha256::new();
-    hasher.update(userId.as_bytes());
-    hasher.update(serviceId.as_bytes());
-    let if_hash: [u8; 32] = hasher.finalize().into();
+    hasher.update(user_id.as_bytes());
+    hasher.update(service_id.as_bytes());
+    let id_hash: [u8; 32] = hasher.finalize().into();
 
     env::commit(&(hash_exists_bytes, file_data_hash, id_hash, pass_hash));
 

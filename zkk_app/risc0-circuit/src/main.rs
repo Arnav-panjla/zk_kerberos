@@ -64,12 +64,12 @@ fn main() {
         println!("Loaded receipt: {:?}", receipt);
         if let Err(_) = receipt.verify(RISC0_CIRCUIT_ID) {
             println!("Saved proof didn't successfully verify; regenerating proof");
-            receipt = authenticate_user(input);
+            receipt = authenticate_user(input.to_vec());
             save_receipt(&receipt, &receipt_path).expect("failed to save receipt");
         }
     } else {
         println!("No existing proof found, generating a new one");
-        receipt = authenticate_user(input);
+        receipt = authenticate_user(input.to_vec());
         save_receipt(&receipt, &receipt_path).expect("failed to save receipt");
     }
 
